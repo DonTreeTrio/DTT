@@ -1,2 +1,8 @@
 node_modules
 .history
+# Next.js 빌드 및 캐시 파일
+.next/
+
+# Webpack hot update 파일
+*.hot-update.js
+*.hot-update.json
