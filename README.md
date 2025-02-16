@@ -119,6 +119,46 @@ feat/signup -> dev
 
 ---
 
+## 📝 CSS 컨벤션
+
+### 1. 스타일은 상수로 선언 후 사용
+
+```tsx
+const HEADER_STYLES = {
+  container: 'w-full h-[5rem] flex justify-around items-center shadow-md',
+  logo: 'rounded-sm',
+  link: 'text-gray-600 hover:text-gray-800',
+  button: 'bg-[#179653] text-white px-4 py-2 rounded-md hover:bg-[#179653]/80',
+};
+
+export default function Header() {
+  return (
+    <header className={HEADER_STYLES.container}>
+      <Link href="/">
+        <Image src="/images/logo.png" alt="logo" width={100} height={100} />
+      </Link>
+    </header>
+  );
+}
+```
+
+### 2. 스타일 순서
+
+```
+absolute top-0 left-0    /* Position */
+flex items-center        /* Display & Flex */
+w-full h-16              /* Width & Height */
+px-4 py-2                /* Padding */
+mx-auto                  /* Margin */
+border rounded-lg        /* Border & Border Radius */
+text-sm font-medium      /* Typography */
+bg-white text-gray-800   /* Colors */
+shadow-md                /* Effects */
+hover:bg-gray-50         /* Interactive */
+```
+
+---
+
 ## 💡 주요 기능 및 기술적 도전
 
 ### 1. 기능 1
