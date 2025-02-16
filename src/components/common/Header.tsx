@@ -7,11 +7,13 @@ import { useRouter } from 'next/navigation';
 // 헤더 스타일
 // 스타일 상수 선언
 const HEADER_STYLES = {
-  container: 'w-full flex justify-around items-center shadow-md',
-  logo: 'rounded-sm',
-  link: 'text-gray-600 hover:text-gray-800',
-  button: 'bg-[#179653] text-white px-4 py-2 rounded-md hover:bg-[#179653]/80',
-};
+  container:
+    'fixed top-0 left-0 w-full h-[5rem] flex items-center justify-around shadow-md bg-white',
+  logo: 'w-[70px] h-[70px] rounded-sm',
+  link: 'text-gray-600 hover:text-gray-800 transition-colors',
+  button:
+    'px-4 py-2 text-white bg-[#179653] rounded-md transition-colors hover:bg-[#179653]/80',
+} as const;
 
 export default function Header() {
   const router = useRouter();
@@ -21,8 +23,8 @@ export default function Header() {
         <Image
           src="/images/logo.png"
           alt="logo"
-          width={100}
-          height={100}
+          width={70}
+          height={70}
           className={HEADER_STYLES.logo}
         />
       </Link>
@@ -40,7 +42,7 @@ export default function Header() {
       </Link>
       <button
         className={HEADER_STYLES.button}
-        onClick={() => router.push('/login')}
+        onClick={() => router.push('/auth/login')}
       >
         로그인
       </button>

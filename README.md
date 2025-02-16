@@ -27,11 +27,15 @@
 
 ### Frontend
 
-<img src="https://img.shields.io/badge/typescript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"> <img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat&logo=Tailwind CSS&logoColor=white"/> <img src="https://img.shields.io/badge/React Query-FF4154?style=for-the-badge&logo=react query&logoColor=white"> <img src="https://img.shields.io/badge/Framer Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white">
+<img src="https://img.shields.io/badge/typescript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"> <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=React&logoColor=white"/> <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=Next.js&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=for-the-badge&logo=Tailwind CSS&logoColor=white"/>
+
+### Communication
+
+<img src="https://img.shields.io/badge/Jira-0052CC?style=for-the-badge&logo=Jira&logoColor=white"> <img src="https://img.shields.io/badge/Confluence-172B4D?style=for-the-badge&logo=Confluence&logoColor=white">
 
 ### DevOps
 
-<img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white"> <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+<img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white"> <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=Vercel&logoColor=white">
 
 ---
 
@@ -90,31 +94,7 @@
 
 ### 3. 개발 브랜치
 
-#### 1. 레포지토리 소유자 (직접 접근)
-
-```
-# 브랜치 명
-main
-└── dev
-    ├── feat/your-task
-    └── fix/your-bug
-```
-
-```
-# 새 기능 개발 시
-git checkout dev
-git checkout -b feat/login
-
-# 작업 후
-git add .
-git commit -m "[git 이모지]feat: 로그인 구현 #이슈번호"
-git push origin feat/login
-
-# PR
-feat/login -> dev
-```
-
-#### 2. fork 한 팀원
+#### 1. fork 한 팀원
 
 ```
 # 브랜치 명
@@ -135,6 +115,46 @@ git push origin feature/signup
 
 # PR
 feat/signup -> dev
+```
+
+---
+
+## 📝 CSS 컨벤션
+
+### 1. 스타일은 상수로 선언 후 사용
+
+```tsx
+const HEADER_STYLES = {
+  container: 'w-full h-[5rem] flex justify-around items-center shadow-md',
+  logo: 'rounded-sm',
+  link: 'text-gray-600 hover:text-gray-800',
+  button: 'bg-[#179653] text-white px-4 py-2 rounded-md hover:bg-[#179653]/80',
+};
+
+export default function Header() {
+  return (
+    <header className={HEADER_STYLES.container}>
+      <Link href="/">
+        <Image src="/images/logo.png" alt="logo" width={100} height={100} />
+      </Link>
+    </header>
+  );
+}
+```
+
+### 2. 스타일 순서
+
+```
+absolute top-0 left-0    /* Position */
+flex items-center        /* Display & Flex */
+w-full h-16              /* Width & Height */
+px-4 py-2                /* Padding */
+mx-auto                  /* Margin */
+border rounded-lg        /* Border & Border Radius */
+text-sm font-medium      /* Typography */
+bg-white text-gray-800   /* Colors */
+shadow-md                /* Effects */
+hover:bg-gray-50         /* Interactive */
 ```
 
 ---
