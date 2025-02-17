@@ -14,7 +14,7 @@ export default function ClientLayout({
   return (
     <>
       {!isAuthPage && <Header />}
-      {children}
+      <main className="mx-30 md:mx-auto w-full max-w-[1440px]">{children}</main>
     </>
   );
 }
