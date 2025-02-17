@@ -157,6 +157,13 @@ shadow-md                /* Effects */
 hover:bg-gray-50         /* Interactive */
 ```
 
+### 3. 좌우 여백
+
+```
+mx-auto
+```
+
+
 ---
 
 ## 💡 주요 기능 및 기술적 도전
