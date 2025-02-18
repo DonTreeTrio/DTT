@@ -64,7 +64,7 @@ export default function LoginForm() {
         <Link href="/auth/findid" className={LOGINFORM_STYLES.link}>
           아이디 찾기
         </Link>
-        <Link href="/auth/findpassword" className={LOGINFORM_STYLES.link}>
+        <Link href="/auth/findpw" className={LOGINFORM_STYLES.link}>
           비밀번호 찾기
         </Link>
         <Link href="/auth/signup" className={LOGINFORM_STYLES.link}>
