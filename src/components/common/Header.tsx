@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 // 스타일 상수 선언
 const HEADER_STYLES = {
   container:
-    'fixed top-0 left-0 w-full h-[5rem] flex items-center justify-around shadow-md bg-white',
+    'sticky top-0 left-0 w-full h-[5rem] flex items-center justify-around shadow-md bg-white z-50',
   logo: 'w-[70px] h-[70px] rounded-sm',
   link: 'text-gray-600 hover:text-gray-800 transition-colors',
   button:

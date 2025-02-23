@@ -12,9 +12,9 @@ export default function ClientLayout({
   const isAuthPage = pathname?.startsWith('/auth');
 
   return (
-    <>
+    <div className='flex flex-col'>
       {!isAuthPage && <Header />}
       <main className="mx-30 md:mx-auto w-full max-w-[1440px]">{children}</main>
-    </>
+    </div>
   );
 }
