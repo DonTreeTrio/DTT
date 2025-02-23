@@ -1,7 +1,5 @@
-import React from 'react';
+import CoinList from './components/CoinList';
 
-const page = () => {
-  return <div></div>;
-};
-
-export default page;
+export default function Page() {
+  return <CoinList />;
+}
