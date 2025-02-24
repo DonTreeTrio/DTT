@@ -10,7 +10,7 @@ const LOGINFORM_STYLES = {
   input:
     'w-full block px-3 py-2 mt-1 border-b border-gray-300 rounded-md focus:outline-none focus:border-black focus:ring-black',
   loginButton:
-    'w-full py-2 text-white bg-black rounded-md transition-colors hover:bg-gray-800',
+    'w-full py-2 text-white bg-[#179653] rounded-md transition-colors hover:bg-gray-800',
   linkContainer: 'flex justify-start mb-6 space-x-4',
   link: 'text-sm text-gray-600 hover:text-gray-900',
   divider: {

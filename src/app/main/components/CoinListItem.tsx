@@ -1,14 +1,22 @@
+'use client';
+
 import type { MarketResponse, TickerResponse } from '@/apis/websocket/type';
+import { useState } from 'react';
 
 interface CoinListItemProps {
   market: MarketResponse;
   tickerData: TickerResponse;
+  isFlashing: boolean;
 }
 
 export default function CoinListItem({
   market,
   tickerData,
+  isFlashing,
 }: CoinListItemProps) {
+  const [prevPrice, setPrevPrice] = useState(tickerData.trade_price);
+  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+
   const currentPrice = Number(tickerData.trade_price || 0); // 현재가
   const priceChange = Number(tickerData.signed_change_price || 0); // 변동가
   const changeRate = Number(tickerData.change_rate || 0); // 변동률
@@ -17,12 +25,16 @@ export default function CoinListItem({
   ); // 거래금액
   const priceColor =
     tickerData.change === 'RISE' ? 'text-red-500' : 'text-blue-500';
+  const flashColor =
+    tickerData.change === 'RISE' ? 'bg-red-100/30' : 'bg-blue-100/30';
 
   return (
-    <div className="flex items-center p-3 hover:bg-gray-200 border-b border-gray-200">
+    <div
+      className={`w-full flex items-center p-3 hover:bg-gray-200 border-b border-gray-200 text-xs transition-colors ${isFlashing ? flashColor : ''}`}
+    >
       <div className="flex-[3]">
-        <div className="font-medium">{market.korean_name}</div>
-        <div className="text-sm text-gray-500">{market.english_name}</div>
+        <h1 className="font-medium">{market.korean_name}</h1>
+        <h2 className="text-sm text-gray-500">{market.english_name}</h2>
       </div>
 
       <div className={`flex-[2] text-right ${priceColor}`}>
@@ -32,7 +44,7 @@ export default function CoinListItem({
       <div className={`flex-[2] text-right ${priceColor}`}>
         {changeRate >= 0 ? '+' : ''}
         {(changeRate * 100).toFixed(2)}%
-        <div className="text-sm">{priceChange.toLocaleString()}</div>
+        <p className="text-sm">{priceChange.toLocaleString()}</p>
       </div>
 
       <div className="flex-[2] text-right">
