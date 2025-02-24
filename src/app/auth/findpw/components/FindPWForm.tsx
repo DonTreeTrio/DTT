@@ -10,11 +10,11 @@ const FORM_STYLES = {
   input:
     'w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:border-black focus:ring-black',
   button:
-    'w-full py-2 text-white bg-black rounded-md transition-colors hover:bg-gray-800',
+    'w-full py-2 text-white bg-[#179653] rounded-md transition-colors hover:bg-gray-800',
   description: 'text-center text-gray-600 text-sm mb-8',
   inputGroup: 'flex gap-2 mt-1',
   verifyButton:
-    'px-4 py-2 text-white bg-gray-500 rounded-md hover:bg-gray-600 whitespace-nowrap',
+    'px-4 py-2 text-white bg-[#179653] rounded-md hover:bg-gray-600 whitespace-nowrap',
 } as const;
 
 type VerificationStatus = 'initial' | 'verified';
