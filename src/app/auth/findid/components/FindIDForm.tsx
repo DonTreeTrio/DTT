@@ -1,5 +1,6 @@
 'use client';
 
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { useState } from 'react';
 import FindIDResult from './FindIDResult';
 
@@ -12,6 +13,7 @@ const FORM_STYLES = {
   button:
     'w-full py-2 text-white bg-black rounded-md transition-colors hover:bg-gray-800',
   description: 'text-center text-gray-600 text-sm mb-8',
+  errorText: `text-red-500 text-xs mt-1 px3`,
 } as const;
 
 type VerificationStatus = 'initial' | 'verified';
@@ -23,6 +25,14 @@ export default function FindIdForm() {
     phone: '',
   });
   const [verifiedEmail, setVerifiedEmail] = useState('');
+
+  const { formData, errors, handleChange } = useFormValidation(
+    {
+      name: '',
+      phone: '',
+    },
+    'findId',
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +62,16 @@ export default function FindIdForm() {
           <input
             type="text"
             id="name"
-            value={userData.name}
-            onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             placeholder="이름 ex) 김철수"
             className={FORM_STYLES.input}
             required
           />
+          {errors.name && (
+            <p className={FORM_STYLES.errorText}>{errors.name}</p>
+          )}
         </div>
 
         <div className={FORM_STYLES.inputWrapper}>
@@ -67,14 +81,16 @@ export default function FindIdForm() {
           <input
             type="tel"
             id="phone"
-            value={userData.phone}
-            onChange={(e) =>
-              setUserData({ ...userData, phone: e.target.value })
-            }
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
             placeholder="' - '를 제외한 11자리"
             className={FORM_STYLES.input}
             required
           />
+          {errors.phone && (
+            <p className={FORM_STYLES.errorText}>{errors.phone}</p>
+          )}
         </div>
 
         <button type="submit" className={FORM_STYLES.button}>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { useState } from 'react';
 import ResetPWForm from './ResetPWForm';
 
@@ -15,6 +16,7 @@ const FORM_STYLES = {
   inputGroup: 'flex gap-2 mt-1',
   verifyButton:
     'px-4 py-2 text-white bg-[#179653] rounded-md hover:bg-gray-600 whitespace-nowrap',
+  errorText: `text-red-500 text-xs mt-1 px3`,
 } as const;
 
 type VerificationStatus = 'initial' | 'verified';
@@ -26,6 +28,14 @@ export default function FindPWForm() {
     verificationCode: '',
   });
   const [isEmailSent, setIsEmailSent] = useState(false);
+
+  const { formData, errors, handleChange } = useFormValidation(
+    {
+      email: '',
+      verificationCode: '',
+    },
+    'findPassword',
+  );
 
   const handleEmailVerification = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,14 +71,16 @@ export default function FindPWForm() {
             <input
               type="email"
               id="email"
-              value={userData.email}
-              onChange={(e) =>
-                setUserData({ ...userData, email: e.target.value })
-              }
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="예) example@example.com"
               className={FORM_STYLES.input}
               required
             />
+            {errors.email && (
+              <p className={FORM_STYLES.errorText}>{errors.email}</p>
+            )}
             <button
               onClick={handleEmailVerification}
               className={FORM_STYLES.verifyButton}
@@ -86,15 +98,17 @@ export default function FindPWForm() {
           <input
             type="text"
             id="verificationCode"
-            value={userData.verificationCode}
-            onChange={(e) =>
-              setUserData({ ...userData, verificationCode: e.target.value })
-            }
+            name="verificationCode"
+            value={formData.verificationCode}
+            onChange={handleChange}
             placeholder="인증번호 입력"
             className={FORM_STYLES.input}
             required
             disabled={!isEmailSent}
           />
+          {errors.verificationCode && (
+            <p className={FORM_STYLES.errorText}>{errors.verificationCode}</p>
+          )}
         </div>
 
         <button

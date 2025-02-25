@@ -1,8 +1,8 @@
 'use client';
 
+import { useFormValidation } from '@/hooks/useFormValidation';
 import Link from 'next/link';
 import OAuthButton from './OauthButton';
-
 const LOGINFORM_STYLES = {
   container: 'w-full flex flex-col space-y-6',
   inputWrapper: 'w-full space-y-1',
@@ -21,9 +21,18 @@ const LOGINFORM_STYLES = {
     text: 'px-2 text-sm text-gray-500 bg-white',
   },
   oauthContainer: 'w-full space-y-3',
+  errorText: `text-red-500 text-xs mt-1 px3`,
 } as const;
 
 export default function LoginForm() {
+  const { formData, errors, handleChange } = useFormValidation(
+    {
+      email: '',
+      password: '',
+    },
+    'login',
+  );
+
   const handleOAuthLogin = (provider: 'kakao' | 'naver' | 'google') => {
     console.log(`${provider} 로그인 시도`);
   };
@@ -39,9 +48,15 @@ export default function LoginForm() {
           <input
             type="email"
             id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
             placeholder="예) coin@coin.net"
             className={LOGINFORM_STYLES.input}
           />
+          {errors.email && (
+            <p className={LOGINFORM_STYLES.errorText}>{errors.email}</p>
+          )}
         </div>
         <div className={LOGINFORM_STYLES.inputWrapper}>
           <label htmlFor="password" className={LOGINFORM_STYLES.label}>
@@ -50,9 +65,15 @@ export default function LoginForm() {
           <input
             type="password"
             id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             placeholder="영문, 숫자, 특수문자 조합 8자리 이상"
             className={LOGINFORM_STYLES.input}
           />
+          {errors.password && (
+            <p className={LOGINFORM_STYLES.errorText}>{errors.password}</p>
+          )}
         </div>
         <button type="submit" className={LOGINFORM_STYLES.loginButton}>
           로그인

@@ -42,7 +42,7 @@ export default function CoinListItem({
       </div>
 
       <div className={`flex-[2] text-right ${priceColor}`}>
-        {changeRate >= 0 ? '+' : ''}
+        {tickerData.change === 'RISE' ? '+' : '-'}
         {(changeRate * 100).toFixed(2)}%
         <p className="text-sm">{priceChange.toLocaleString()}</p>
       </div>

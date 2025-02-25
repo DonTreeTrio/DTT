@@ -1,7 +1,7 @@
 'use client';
 
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 const FORM_STYLES = {
   container: 'w-full max-w-md space-y-8',
@@ -17,6 +17,7 @@ const FORM_STYLES = {
   birthGroup: 'grid grid-cols-3 gap-4',
   select:
     'w-full px-3 py-2 mt-1 border-b border-gray-300 focus:outline-none focus:border-black text-center appearance-none bg-transparent',
+  errorText: `text-red-500 text-xs mt-[0.1rem] px3`,
 } as const;
 
 interface SignUpFormProps {
@@ -25,16 +26,19 @@ interface SignUpFormProps {
 
 export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
   const router = useRouter();
-  const [userData, setUserData] = useState({
-    password: '',
-    confirmPassword: '',
-    name: '',
-    nickname: '',
-    phone: '',
-    birthYear: '',
-    birthMonth: '',
-    birthDay: '',
-  });
+  const { formData, errors, handleChange } = useFormValidation(
+    {
+      password: '',
+      confirmPassword: '',
+      name: '',
+      nickname: '',
+      phone: '',
+      birthYear: '',
+      birthMonth: '',
+      birthDay: '',
+    },
+    'signup',
+  );
 
   // 년도 옵션 생성 (현재 년도부터 100년 전까지)
   const currentYear = new Date().getFullYear();
@@ -77,14 +81,16 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <input
             type="password"
             id="password"
-            value={userData.password}
-            onChange={(e) =>
-              setUserData({ ...userData, password: e.target.value })
-            }
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             placeholder="영문, 숫자, 특수문자 조합 8자리 이상"
             className={FORM_STYLES.input}
             required
           />
+          {errors.password && (
+            <p className={FORM_STYLES.errorText}>{errors.password}</p>
+          )}
         </div>
 
         {/* 비밀번호 확인 */}
@@ -95,14 +101,16 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <input
             type="password"
             id="confirmPassword"
-            value={userData.confirmPassword}
-            onChange={(e) =>
-              setUserData({ ...userData, confirmPassword: e.target.value })
-            }
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
             placeholder="비밀번호를 한번 더 입력해주세요"
             className={FORM_STYLES.input}
             required
           />
+          {errors.confirmPassword && (
+            <p className={FORM_STYLES.errorText}>{errors.confirmPassword}</p>
+          )}
         </div>
 
         {/* 이름 */}
@@ -113,12 +121,16 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <input
             type="text"
             id="name"
-            value={userData.name}
-            onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             placeholder="이름을 입력해주세요"
             className={FORM_STYLES.input}
             required
           />
+          {errors.name && (
+            <p className={FORM_STYLES.errorText}>{errors.name}</p>
+          )}
         </div>
 
         {/* 닉네임 */}
@@ -129,14 +141,16 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <input
             type="text"
             id="nickname"
-            value={userData.nickname}
-            onChange={(e) =>
-              setUserData({ ...userData, nickname: e.target.value })
-            }
+            name="nickname"
+            value={formData.nickname}
+            onChange={handleChange}
             placeholder="닉네임을 입력해주세요"
             className={FORM_STYLES.input}
             required
           />
+          {errors.nickname && (
+            <p className={FORM_STYLES.errorText}>{errors.nickname}</p>
+          )}
         </div>
 
         {/* 휴대폰 */}
@@ -147,14 +161,16 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <input
             type="tel"
             id="phone"
-            value={userData.phone}
-            onChange={(e) =>
-              setUserData({ ...userData, phone: e.target.value })
-            }
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
             placeholder="'-' 없이 숫자만 입력해주세요"
             className={FORM_STYLES.input}
             required
           />
+          {errors.phone && (
+            <p className={FORM_STYLES.errorText}>{errors.phone}</p>
+          )}
         </div>
 
         {/* 생년월일 */}
@@ -162,10 +178,9 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
           <label className={FORM_STYLES.label}>생년월일</label>
           <div className={FORM_STYLES.birthGroup}>
             <select
-              value={userData.birthYear}
-              onChange={(e) =>
-                setUserData({ ...userData, birthYear: e.target.value })
-              }
+              name="birthYear"
+              value={formData.birthYear}
+              onChange={handleChange}
               className={FORM_STYLES.select}
               required
             >
@@ -178,10 +193,9 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
             </select>
 
             <select
-              value={userData.birthMonth}
-              onChange={(e) =>
-                setUserData({ ...userData, birthMonth: e.target.value })
-              }
+              name="birthMonth"
+              value={formData.birthMonth}
+              onChange={handleChange}
               className={FORM_STYLES.select}
               required
             >
@@ -194,10 +208,9 @@ export default function SignUpForm({ verifiedEmail }: SignUpFormProps) {
             </select>
 
             <select
-              value={userData.birthDay}
-              onChange={(e) =>
-                setUserData({ ...userData, birthDay: e.target.value })
-              }
+              name="birthDay"
+              value={formData.birthDay}
+              onChange={handleChange}
               className={FORM_STYLES.select}
               required
             >

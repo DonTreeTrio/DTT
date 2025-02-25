@@ -105,7 +105,7 @@ export default function CoinListContainer({
   );
 
   return (
-    <div className="w-[450px] mt-[10rem]">
+    <div className="w-[450px] mt-[4rem]">
       <CoinSearch onSearch={handleSearch} />
       <CoinListHeader onSort={handleSort} />
       <CoinList
