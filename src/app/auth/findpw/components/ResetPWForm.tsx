@@ -1,5 +1,6 @@
 'use client';
 
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -12,6 +13,7 @@ const FORM_STYLES = {
   button:
     'w-full py-2 text-white bg-black rounded-md transition-colors hover:bg-gray-800',
   description: 'text-center text-gray-600 text-sm mb-8',
+  errorText: `text-red-500 text-xs mt-1 px3`,
 } as const;
 
 export default function ResetPWForm() {
@@ -21,6 +23,13 @@ export default function ResetPWForm() {
     confirmPassword: '',
   });
 
+  const { formData, errors, handleChange } = useFormValidation(
+    {
+      newPassword: '',
+      confirmPassword: '',
+    },
+    'findPassword',
+  );
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // 실제로는 여기서 비밀번호 변경 API 호출
@@ -41,14 +50,16 @@ export default function ResetPWForm() {
           <input
             type="password"
             id="newPassword"
-            value={passwords.newPassword}
-            onChange={(e) =>
-              setPasswords({ ...passwords, newPassword: e.target.value })
-            }
+            name="newPassword"
+            value={formData.newPassword}
+            onChange={handleChange}
             placeholder="영문, 숫자, 특수문자 조합 8자리 이상"
             className={FORM_STYLES.input}
             required
           />
+          {errors.newPassword && (
+            <p className={FORM_STYLES.errorText}>{errors.newPassword}</p>
+          )}
         </div>
 
         <div className={FORM_STYLES.inputWrapper}>
@@ -58,14 +69,16 @@ export default function ResetPWForm() {
           <input
             type="password"
             id="confirmPassword"
-            value={passwords.confirmPassword}
-            onChange={(e) =>
-              setPasswords({ ...passwords, confirmPassword: e.target.value })
-            }
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
             placeholder="비밀번호를 한번 더 입력해주세요"
             className={FORM_STYLES.input}
             required
           />
+          {errors.confirmPassword && (
+            <p className={FORM_STYLES.errorText}>{errors.confirmPassword}</p>
+          )}
         </div>
 
         <button type="submit" className={FORM_STYLES.button}>

@@ -15,7 +15,7 @@ export default function CoinList({
   priceFlash,
 }: CoinListProps) {
   return (
-    <div className="h-full pt-[0.2rem] overflow-y-auto">
+    <div className="max-h-[650px] pt-[0.2rem] overflow-y-auto">
       {markets.map((market) => {
         const data = tickerData[market.market];
         if (!data) return null;
