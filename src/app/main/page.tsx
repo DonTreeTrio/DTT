@@ -1,7 +1,7 @@
 import { marketApi } from '@/apis/websocket/market';
 import Loading from '@/components/common/Loading';
 import { Suspense } from 'react';
-import CoinListContainer from './components/CoinListContainer';
+import CoinListContainer from './components/coinList/CoinListContainer';
 
 export default async function Page() {
   // 초기 코인 마켓 데이터 조회

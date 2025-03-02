@@ -7,15 +7,17 @@ interface CoinListProps {
   markets: MarketResponse[];
   tickerData: Record<string, TickerResponse>;
   priceFlash: Record<string, boolean>;
+  onSelectCoin: (market: string) => void;
 }
 
 export default function CoinList({
   markets,
   tickerData,
   priceFlash,
+  onSelectCoin,
 }: CoinListProps) {
   return (
-    <div className="max-h-[650px] pt-[0.2rem] overflow-y-auto">
+    <div className="max-h-[800px] overflow-y-auto pt-[0.2rem]">
       {markets.map((market) => {
         const data = tickerData[market.market];
         if (!data) return null;
@@ -25,6 +27,7 @@ export default function CoinList({
             market={market}
             tickerData={data}
             isFlashing={priceFlash[market.market]}
+            onSelectCoin={onSelectCoin}
           />
         );
       })}
