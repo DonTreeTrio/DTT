@@ -25,7 +25,7 @@ const STYLES = {
     header: "flex justify-between items-center mb-4",
     title: "text-lg font-bold",
     input: "border p-2 w-full my-4",
-    grid: "grid grid-cols-4 gap-4",
+    grid: "grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", // 반응형 grid 스타일
     card: "border p-4 rounded-lg shadow-md",
     image: "w-full h-32 object-cover",
     productName: "mt-2 font-bold",
