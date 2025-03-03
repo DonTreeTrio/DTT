@@ -1,22 +1,20 @@
 'use client';
 
 import type { MarketResponse, TickerResponse } from '@/apis/websocket/type';
-import { useState } from 'react';
 
 interface CoinListItemProps {
   market: MarketResponse;
   tickerData: TickerResponse;
   isFlashing: boolean;
+  onSelectCoin: (market: string) => void;
 }
 
 export default function CoinListItem({
   market,
   tickerData,
   isFlashing,
+  onSelectCoin,
 }: CoinListItemProps) {
-  const [prevPrice, setPrevPrice] = useState(tickerData.trade_price);
-  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
-
   const currentPrice = Number(tickerData.trade_price || 0); // 현재가
   const priceChange = Number(tickerData.signed_change_price || 0); // 변동가
   const changeRate = Number(tickerData.change_rate || 0); // 변동률
@@ -30,7 +28,8 @@ export default function CoinListItem({
 
   return (
     <div
-      className={`w-full flex items-center p-3 hover:bg-gray-200 border-b border-gray-200 text-xs transition-colors ${isFlashing ? flashColor : ''}`}
+      className={`w-full flex items-center p-3 hover:bg-gray-200 border-b border-gray-200 text-xs transition-colors cursor-pointer ${isFlashing ? flashColor : ''}`}
+      onClick={() => onSelectCoin(market.market)}
     >
       <div className="flex-[3]">
         <h1 className="font-medium">{market.korean_name}</h1>
