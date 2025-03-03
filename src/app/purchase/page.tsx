@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import CartModal from "./components/CartModal";
 
-interface Product {
+export interface Product {
     id: number;
     name: string;
     price: number;
@@ -16,7 +17,7 @@ const products: Product[] = [
     { id: 4, name: "배달의 민족 만원 교환권", price: 200000, image: "/baemin.png" },
 ];
 
-interface Cart {
+export interface Cart {
     [key: number]: number;
 }
 
@@ -38,9 +39,31 @@ const STYLES = {
 
 export default function Home() {
     const [cart, setCart] = useState<Cart>({});
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const addToCart = (id: number) => {
         setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    };
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
+
+    const handleCheckout = () => {
+        // 결제 로직을 여기에 추가할 수 있습니다.
+        alert("결제가 완료되었습니다!");
+        closeModal();
+    };
+
+    // 상품 삭제 함수
+    const removeItem = (id: number) => {
+        const newCart = { ...cart };
+        delete newCart[id];
+        setCart(newCart);
+    };
+
+    // 수량 수정 함수
+    const updateQuantity = (id: number, quantity: number) => {
+        setCart((prev) => ({ ...prev, [id]: quantity }));
     };
 
     return (
@@ -51,7 +74,9 @@ export default function Home() {
                     <div className={STYLES.cartSummary}>
                         총 {Object.values(cart).reduce((a, b) => a + b, 0)} 개의 상품
                     </div>
-                    <button className={STYLES.checkoutButton}>결제하기</button>
+                    <button className={STYLES.checkoutButton} onClick={openModal}>
+                        결제하기
+                    </button>
                 </div>
             </div>
             <input type="text" placeholder="Search" className={STYLES.input} />
@@ -67,6 +92,18 @@ export default function Home() {
                     </div>
                 ))}
             </div>
+
+            {/* CartModal 컴포넌트 사용 */}
+            {isModalOpen && (
+                <CartModal
+                    cart={cart}
+                    products={products}
+                    onClose={closeModal}
+                    onCheckout={handleCheckout}
+                    onRemoveItem={removeItem}
+                    onUpdateQuantity={updateQuantity}
+                />
+            )}
         </div>
     );
 }
