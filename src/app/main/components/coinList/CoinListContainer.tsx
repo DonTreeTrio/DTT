@@ -144,6 +144,7 @@ export default function CoinListContainer({
         <TimeFilter
           onTimeChange={handleTimeChange}
           selectedTime={selectedTime}
+          selectedPeriod={selectedPeriod}
         />
         <CandleChart
           market={selectedMarket}
