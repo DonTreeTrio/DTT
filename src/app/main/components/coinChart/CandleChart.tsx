@@ -5,13 +5,17 @@ import {
   CandleTime,
   getCandleSearch,
 } from '@/apis/bithumb/candleSearch';
-import * as echarts from 'echarts';
-import { useEffect, useRef, useState } from 'react';
+import { calculateMA } from '@/common/utils';
+import { useEffect, useState } from 'react';
+import ChartHeader from './ChartHeader';
+import ChartRender from './ChartRender';
+import ChartToolbar from './ChartToolbar';
+import { CHART_STYLES } from './styles';
 
 interface CandleChartProps {
   market: string;
   period: CandlePeriod;
-  detailTime: CandleTime;
+  detailTime: CandleTime | '';
 }
 
 export default function CandleChart({
@@ -20,130 +24,78 @@ export default function CandleChart({
   detailTime,
 }: CandleChartProps) {
   const [candleData, setCandleData] = useState<any[]>([]);
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [zoomLevel, setZoomLevel] = useState(0); // 확대 수준을 저장하는 상태
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [priceChange, setPriceChange] = useState<number>(0);
+  const [priceChangePercent, setPriceChangePercent] = useState<number>(0);
+  const [highPrice, setHighPrice] = useState<number | null>(null);
+  const [lowPrice, setLowPrice] = useState<number | null>(null);
+  const [openPrice, setOpenPrice] = useState<number | null>(null);
+  const [ma15, setMa15] = useState<number | null>(null);
+  const [ma60, setMa60] = useState<number | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(0);
+  const [showMA15, setShowMA15] = useState(true);
+  const [showMA60, setShowMA60] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCandleData = async () => {
     try {
-      const response = await getCandleSearch(period, detailTime, market);
+      setIsLoading(true);
+
+      let response;
+      if (period === 'days' || period === 'weeks' || period === 'months') {
+        response = await getCandleSearch(period, '', market);
+      } else {
+        response = await getCandleSearch(period, detailTime, market);
+      }
+
+      // 응답이 배열인지 확인
+      if (!response || !Array.isArray(response)) {
+        console.error('Invalid candle data response:', response);
+        setCandleData([]);
+        return;
+      }
+
       setCandleData(response);
+
+      // 현재 가격 및 변화량 계산
+      if (response.length > 0) {
+        const sortedData = [...response].sort(
+          (a, b) =>
+            new Date(b.candle_date_time_kst).getTime() -
+            new Date(a.candle_date_time_kst).getTime(),
+        );
+
+        const latestData = sortedData[0];
+        const prevData = sortedData[1] || latestData;
+
+        setCurrentPrice(Number(latestData.trade_price));
+        setHighPrice(Number(latestData.high_price));
+        setLowPrice(Number(latestData.low_price));
+        setOpenPrice(Number(latestData.opening_price));
+
+        const change =
+          Number(latestData.trade_price) - Number(prevData.trade_price);
+        setPriceChange(change);
+        setPriceChangePercent((change / Number(prevData.trade_price)) * 100);
+
+        // MA 15 계산
+        const ma15Value = calculateMA(sortedData.slice(0, 15).reverse(), 15);
+        setMa15(
+          ma15Value.length > 0 ? ma15Value[ma15Value.length - 1].value : null,
+        );
+
+        // MA 60 계산
+        const ma60Value = calculateMA(sortedData.slice(0, 60).reverse(), 60);
+        setMa60(
+          ma60Value.length > 0 ? ma60Value[ma60Value.length - 1].value : null,
+        );
+      }
     } catch (error) {
       console.error('Failed to fetch candle data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // 차트 설정
-  useEffect(() => {
-    if (!chartRef.current || candleData.length === 0) return;
-
-    const chart = echarts.init(chartRef.current);
-
-    const updateZoomLevel = (params: any) => {
-      const zoom = params.batch[0].end - params.batch[0].start;
-      setZoomLevel(zoom);
-    };
-
-    chart.on('dataZoom', updateZoomLevel);
-
-    const option = {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'cross',
-        },
-      },
-      grid: {
-        left: '10%',
-        right: '10%',
-        bottom: '15%',
-      },
-      xAxis: {
-        type: 'category',
-        data: [...candleData]
-          .sort(
-            (a, b) =>
-              new Date(a.candle_date_time_kst).getTime() -
-              new Date(b.candle_date_time_kst).getTime(),
-          )
-          .map((item) => {
-            const date = new Date(item.candle_date_time_kst);
-            if (zoomLevel > 80) {
-              return `${date.getHours()}:${date.getMinutes()}`;
-            } else if (zoomLevel > 50) {
-              return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}`;
-            } else {
-              return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-            }
-          }),
-        axisLabel: {
-          formatter: (value: string) => value,
-          align: 'center',
-        },
-        scale: true,
-        splitLine: { show: false },
-        min: 'dataMin',
-        max: 'dataMax',
-      },
-      yAxis: {
-        scale: true,
-        splitArea: {
-          show: true,
-        },
-      },
-      dataZoom: [
-        {
-          type: 'inside',
-          start: 0,
-          end: 100,
-        },
-        {
-          show: true,
-          type: 'slider',
-          top: '90%',
-          start: 0,
-          end: 100,
-        },
-      ],
-      series: [
-        {
-          name: 'Candle',
-          type: 'candlestick',
-          data: [...candleData]
-            .sort(
-              (a, b) =>
-                new Date(a.candle_date_time_kst).getTime() -
-                new Date(b.candle_date_time_kst).getTime(),
-            )
-            .map((item) => [
-              Number(item.opening_price),
-              Number(item.trade_price),
-              Number(item.high_price),
-              Number(item.low_price),
-            ]),
-          itemStyle: {
-            color: '#ef4444',
-            color0: '#3b82f6',
-            borderColor: '#ef4444',
-            borderColor0: '#3b82f6',
-            borderWidth: 1,
-          },
-        },
-      ],
-    };
-
-    chart.setOption(option);
-
-    // 반응형 처리
-    const handleResize = () => {
-      chart.resize();
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      chart.dispose();
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [candleData, zoomLevel]);
 
   // 데이터 가져오기
   useEffect(() => {
@@ -155,8 +107,40 @@ export default function CandleChart({
   }, [market, period, detailTime]);
 
   return (
-    <div className="w-full h-full bg-white p-4 rounded-lg shadow-sm">
-      <div ref={chartRef} style={{ width: '100%', height: '500px' }} />
+    <div className={CHART_STYLES.container}>
+      <ChartHeader
+        market={market}
+        period={period}
+        detailTime={detailTime}
+        currentPrice={currentPrice}
+        openPrice={openPrice}
+        highPrice={highPrice}
+        lowPrice={lowPrice}
+        priceChange={priceChange}
+        priceChangePercent={priceChangePercent}
+        ma15={ma15}
+        ma60={ma60}
+        showMA15={showMA15}
+        showMA60={showMA60}
+        onToggleMA15={() => setShowMA15(!showMA15)}
+        onToggleMA60={() => setShowMA60(!showMA60)}
+      />
+
+      <ChartToolbar />
+
+      {isLoading ? (
+        <div className={CHART_STYLES.chart.loading}>
+          <div className={CHART_STYLES.chart.loadingSpinner}></div>
+        </div>
+      ) : (
+        <ChartRender
+          candleData={candleData}
+          showMA15={showMA15}
+          showMA60={showMA60}
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
+        />
+      )}
     </div>
   );
 }
