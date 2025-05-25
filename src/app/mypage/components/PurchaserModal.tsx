@@ -1,14 +1,34 @@
 "use client";
 
+import React from "react";
+import { motion } from "framer-motion";
 import BarcodeCollapse from "@/components/common/BarcodeCollapse";
-import React, { useState } from "react";
+
+interface PurchaseItem {
+    id: number;
+    image: string;
+    name: string;
+    price: number;
+    barcode?: string;
+}
+
+interface PurchaserModalProps {
+    closeModal: () => void;
+    purchaseItems: PurchaseItem[];
+}
 
 const styles = {
-    container: "flex flex-col gap-3",
-    card: "border border-gray-300 rounded-lg shadow-md",
-    cardHeader: "flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-100 transition-all",
-    image: "w-12 h-12",
-    title: "font-bold",
+    container: "p-4",
+    header: "flex justify-between items-center mb-4",
+    title: "text-lg font-bold",
+    closeButton: "text-gray-500 hover:text-gray-700",
+    itemList: "space-y-4",
+    item: "flex items-center gap-4 p-3 border-b border-gray-100 last:border-0",
+    itemImage: "w-16 h-16 object-cover rounded-lg",
+    itemInfo: "flex-1",
+    itemName: "font-medium",
+    itemPrice: "text-gray-600",
+    emptyMessage: "text-center text-gray-500 py-8",
     footer: "mt-5 flex flex-col gap-2", // 세로 정렬 + 간격 추가
     footerText: "font-bold",
     buttonContainer: "flex flex-col center gap-2 mt-4",
@@ -16,43 +36,45 @@ const styles = {
     divider: "border border-gray-100",
 };
 
-const PurchaserModal = ({ purchaseItems, closeModal }: any) => {
-    const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-
-    const toggleExpand = (id: string) => {
-        setExpandedItems((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
-            return newSet;
-        });
-    };
-
+const PurchaserModal: React.FC<PurchaserModalProps> = ({ closeModal, purchaseItems }) => {
     return (
-        <>
-            <h2 className="text-xl font-bold mb-4">구매내역</h2>
-            <div className={styles.container}>
-                {purchaseItems.map((item: any) => (
-                    <div key={item.id} className={styles.card}>
-                        <div className={styles.cardHeader} onClick={() => toggleExpand(item.id)}>
-                            <img src={item.image} alt={item.name} className={styles.image} />
-                            <div>
-                                <div className={styles.title}>{item.name}</div>
-                                <div>{item.price}원</div>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className={styles.container}
+        >
+            <div className={styles.header}>
+                <h2 className={styles.title}>구매내역</h2>
+                <button onClick={closeModal} className={styles.closeButton}>
+                    ✕
+                </button>
+            </div>
+            <div className={styles.itemList}>
+                {purchaseItems.length === 0 ? (
+                    <div className={styles.emptyMessage}>구매내역이 없습니다</div>
+                ) : (
+                    purchaseItems.map((item) => (
+                        <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className={styles.item}
+                        >
+                            <img src={item.image} alt={item.name} className={styles.itemImage} />
+                            <div className={styles.itemInfo}>
+                                <div className={styles.itemName}>{item.name}</div>
+                                <div className={styles.itemPrice}>{item.price.toLocaleString()}원</div>
                             </div>
-                        </div>
-
-                        {/* 바코드 표시 컴포넌트 */}
-                        <BarcodeCollapse isOpen={expandedItems.has(item.id)} barcode={item.barcode} />
-                    </div>
-                ))}
+                        </motion.div>
+                    ))
+                )}
             </div>
 
             <div className={styles.footer}>
-                <span className={styles.footerText}>총수량: 3개</span>
+                <span className={styles.footerText}>총수량: {purchaseItems.length}개</span>
                 <div className={styles.divider} />
                 <span className={styles.footerText}>보유 포인트: 100,000,000원</span>
                 <div className={styles.divider} />
@@ -63,7 +85,7 @@ const PurchaserModal = ({ purchaseItems, closeModal }: any) => {
                     닫기
                 </button>
             </div>
-        </>
+        </motion.div>
     );
 };
 
