@@ -25,3 +25,20 @@ export interface TickerResponse {
   acc_trade_price_24h: number;
   timestamp: number;
 }
+
+// 호가창 데이터 응답 타입
+export interface OrderBookUnit {
+  ask_price: number; // 매도호가
+  bid_price: number; // 매수호가
+  ask_size: number; // 매도 잔량
+  bid_size: number; // 매수 잔량
+}
+
+export interface OrderBookResponse {
+  type: 'orderbook';
+  code: string; // 마켓 코드
+  timestamp: number; // 호가 생성 시각
+  total_ask_size: number; // 호가 매도 총 잔량
+  total_bid_size: number; // 호가 매수 총 잔량
+  orderbook_units: OrderBookUnit[]; // 호가 리스트
+}
