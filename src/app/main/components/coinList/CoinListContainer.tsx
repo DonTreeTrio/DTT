@@ -1,11 +1,9 @@
 'use client';
 
-import { CandlePeriod, CandleTime } from '@/apis/bithumb/candleSearch';
 import type { MarketResponse, TickerResponse } from '@/apis/websocket/type';
 import { bithumbSocket } from '@/apis/websocket/websocket';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import CandleChart from '../coinChart/CandleChart';
-import TimeFilter from '../coinChart/TimeFilter';
+import { useMarket } from '../../context/MarketContext';
 import CoinList from './CoinList';
 import CoinListHeader from './CoinListHeader';
 import CoinSearch from './CoinSearch';
@@ -20,7 +18,9 @@ type SortDirection = 'asc' | 'desc';
 export default function CoinListContainer({
   initialMarkets,
 }: CoinListContainerProps) {
-  const [marketInfo, setMarketInfo] =
+  const { setSelectedMarket, setMarketInfo: setContextMarketInfo } =
+    useMarket();
+  const [marketInfo, setLocalMarketInfo] =
     useState<MarketResponse[]>(initialMarkets);
   const [filteredMarkets, setFilteredMarkets] =
     useState<MarketResponse[]>(initialMarkets);
@@ -30,33 +30,26 @@ export default function CoinListContainer({
   const [priceFlash, setPriceFlash] = useState<Record<string, boolean>>({});
   const prevPrices = useRef<Record<string, number>>({});
   const wsRef = useRef<{ close: () => void } | null>(null);
-  const [selectedMarket, setSelectedMarket] = useState<string>('KRW-BTC');
-  const [selectedTime, setSelectedTime] = useState<CandleTime>('1');
-  const [selectedPeriod, setSelectedPeriod] = useState<CandlePeriod>('minutes');
 
+  // 마켓 정보 업데이트 시 Context에도 반영
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    wsRef.current = bithumbSocket.connect(marketInfo, (data) => {
-      const currentPrice = Number(data.trade_price);
-      const prevPrice = prevPrices.current[data.code];
-
-      if (prevPrice && currentPrice !== prevPrice) {
-        setPriceFlash((prev) => ({ ...prev, [data.code]: true }));
-        setTimeout(() => {
-          setPriceFlash((prev) => ({ ...prev, [data.code]: false }));
-        }, 500);
+    // 티커 데이터를 marketInfo와 병합하여 Context에 설정
+    const enhancedMarketInfo = marketInfo.map((market) => {
+      const ticker = tickerData[market.market];
+      if (ticker) {
+        return {
+          ...market,
+          trade_price: Number(ticker.trade_price),
+          change_rate: Number(ticker.signed_change_rate),
+          change_price: Number(ticker.signed_change_price),
+          acc_trade_price_24h: Number(ticker.acc_trade_price_24h),
+        };
       }
-
-      prevPrices.current[data.code] = currentPrice;
-      setTickerData((prev) => ({
-        ...prev,
-        [data.code]: data,
-      }));
+      return market;
     });
 
-    return () => wsRef.current?.close();
-  }, [marketInfo]);
+    setContextMarketInfo(enhancedMarketInfo);
+  }, [marketInfo, tickerData, setContextMarketInfo]);
 
   // 코인 리스트 정렬
   const handleSort = (key: SortKey, direction: SortDirection) => {
@@ -91,7 +84,16 @@ export default function CoinListContainer({
       }
     });
 
-    setMarketInfo(sortedMarkets);
+    setLocalMarketInfo(sortedMarkets);
+
+    const sortedFilteredMarkets = [...filteredMarkets].sort((a, b) => {
+      // 원본 정렬된 배열에서의 인덱스를 기준으로 정렬
+      const aIndex = sortedMarkets.findIndex((m) => m.market === a.market);
+      const bIndex = sortedMarkets.findIndex((m) => m.market === b.market);
+      return aIndex - bIndex;
+    });
+
+    setFilteredMarkets(sortedFilteredMarkets);
   };
 
   // 코인 검색
@@ -113,23 +115,41 @@ export default function CoinListContainer({
   );
 
   // 코인 선택 핸들러
-  const handleSelectedCoin = useCallback((market: string) => {
-    setSelectedMarket(market);
-  }, []);
-
-  // 시간 선택 핸들러
-  const handleTimeChange = useCallback(
-    (time: CandleTime, period: CandlePeriod) => {
-      setSelectedTime(time);
-      setSelectedPeriod(period);
+  const handleSelectedCoin = useCallback(
+    (market: string) => {
+      setSelectedMarket(market);
     },
-    [],
+    [setSelectedMarket],
   );
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    wsRef.current = bithumbSocket.connect(marketInfo, (data) => {
+      const currentPrice = Number(data.trade_price);
+      const prevPrice = prevPrices.current[data.code];
+
+      if (prevPrice && currentPrice !== prevPrice) {
+        setPriceFlash((prev) => ({ ...prev, [data.code]: true }));
+        setTimeout(() => {
+          setPriceFlash((prev) => ({ ...prev, [data.code]: false }));
+        }, 500);
+      }
+
+      prevPrices.current[data.code] = currentPrice;
+      setTickerData((prev) => ({
+        ...prev,
+        [data.code]: data,
+      }));
+    });
+
+    return () => wsRef.current?.close();
+  }, [marketInfo]);
+
   return (
-    <div className="flex">
+    <div>
       {/* 코인 리스트 */}
-      <section className="w-[370px] mt-[4rem]">
+      <div className="mt-[4rem]">
         <CoinSearch onSearch={handleSearch} />
         <CoinListHeader onSort={handleSort} />
         <CoinList
@@ -138,20 +158,7 @@ export default function CoinListContainer({
           priceFlash={priceFlash}
           onSelectCoin={handleSelectedCoin}
         />
-      </section>
-      {/* 코인 차트 */}
-      <section className="w-[1050px] h-full">
-        <TimeFilter
-          onTimeChange={handleTimeChange}
-          selectedTime={selectedTime}
-          selectedPeriod={selectedPeriod}
-        />
-        <CandleChart
-          market={selectedMarket}
-          period={selectedPeriod}
-          detailTime={selectedTime}
-        />
-      </section>
+      </div>
     </div>
   );
 }

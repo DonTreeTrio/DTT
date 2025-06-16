@@ -1,16 +1,18 @@
 'use client';
 
+import { CandleData, CandlePeriod } from '@/apis/bithumb/candleSearch';
 import { calculateMA, formatDateByZoomLevel } from '@/common/utils';
 import * as echarts from 'echarts';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CHART_OPTIONS } from './styles';
 
 interface ChartRenderProps {
-  candleData: any[];
+  candleData: CandleData[];
   showMA15: boolean;
   showMA60: boolean;
   zoomLevel: number;
   onZoomChange: (zoom: number) => void;
+  period: CandlePeriod;
 }
 
 export default function ChartRender({
@@ -19,8 +21,14 @@ export default function ChartRender({
   showMA60,
   zoomLevel,
   onZoomChange,
+  period,
 }: ChartRenderProps) {
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+  const [startValue, setStartValue] = useState<number>(
+    period === 'minutes' ? 80 : 50,
+  );
+  const [endValue, setEndValue] = useState<number>(100);
 
   // 차트 설정
   useEffect(() => {
@@ -32,81 +40,101 @@ export default function ChartRender({
     )
       return;
 
+    // 이전 차트 인스턴스가 있으면 정리
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.dispose();
+    }
+
+    // 새 차트 인스턴스 생성
     const chart = echarts.init(chartRef.current);
+    chartInstanceRef.current = chart;
 
-    const updateZoomLevel = (params: any) => {
-      const zoom = params.batch[0].end - params.batch[0].start;
-      onZoomChange(zoom);
-    };
+    // 차트에 표시할 데이터 준비
+    const chartData = candleData.map((item) => [
+      Number(item.opening_price),
+      Number(item.trade_price),
+      Number(item.high_price),
+      Number(item.low_price),
+    ]);
 
-    chart.on('dataZoom', updateZoomLevel);
-
-    // 데이터 정렬
-    const sortedData = [...candleData].sort(
-      (a, b) =>
-        new Date(a.candle_date_time_kst).getTime() -
-        new Date(b.candle_date_time_kst).getTime(),
-    );
+    // 날짜/시간 데이터 준비
+    const dates = candleData.map((item) => {
+      const date = new Date(item.candle_date_time_kst);
+      return formatDateByZoomLevel(date, zoomLevel, period);
+    });
 
     // MA 15 계산
-    const ma15Data = calculateMA(sortedData, 15);
+    const ma15Data = calculateMA(candleData, 15);
 
     // MA 60 계산
-    const ma60Data = calculateMA(sortedData, 60);
+    const ma60Data = calculateMA(candleData, 60);
 
+    // 기본 옵션 설정
     const option = {
       animation: false,
       tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'cross',
+          label: {
+            backgroundColor: '#6a7985',
+          },
         },
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderWidth: 1,
         borderColor: CHART_OPTIONS.colors.border,
         padding: 10,
         textStyle: {
-          color: '#000',
+          color: '#333',
+          fontSize: 12,
         },
         formatter: function (params: any) {
+          if (!params || params.length === 0) return '';
+
           const candleData = params[0].data;
-          //console.log('candleData', candleData);
+          const date = params[0].name;
 
-          let tooltip = `<div style="font-weight: bold; margin-bottom: 5px;">${params[0].name}</div>`;
+          // 상승/하락 여부에 따라 색상 결정 (시가 > 종가: 하락, 시가 < 종가: 상승)
+          const isDown = candleData[0] > candleData[1];
+          const colorStyle = isDown
+            ? `color:${CHART_OPTIONS.colors.down}`
+            : `color:${CHART_OPTIONS.colors.up}`;
 
-          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                        <span>시가:</span>
-                        <span style="color: ${candleData[0] > candleData[1] ? CHART_OPTIONS.colors.down : CHART_OPTIONS.colors.up}">${candleData[0].toLocaleString()}</span>
-                      </div>`;
+          let tooltip = `<div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">${date}</div>`;
 
-          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                        <span>종가:</span>
-                        <span style="color: ${candleData[0] > candleData[1] ? CHART_OPTIONS.colors.down : CHART_OPTIONS.colors.up}">${candleData[1].toLocaleString()}</span>
-                      </div>`;
+          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>시가:</span>
+                      <span style="${colorStyle}">${candleData[0].toLocaleString()}</span>
+                    </div>`;
 
-          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                        <span>고가:</span>
-                        <span style="color: ${candleData[0] > candleData[1] ? CHART_OPTIONS.colors.down : CHART_OPTIONS.colors.up}">${candleData[2].toLocaleString()}</span>
-                      </div>`;
+          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>종가:</span>
+                      <span style="${colorStyle}; font-weight: bold">${candleData[1].toLocaleString()}</span>
+                    </div>`;
 
-          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                        <span>저가:</span>
-                        <span style="color: ${candleData[0] > candleData[1] ? CHART_OPTIONS.colors.down : CHART_OPTIONS.colors.up}">${candleData[3].toLocaleString()}</span>
-                      </div>`;
+          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>고가:</span>
+                      <span style="${colorStyle}">${candleData[2].toLocaleString()}</span>
+                    </div>`;
+
+          tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>저가:</span>
+                      <span style="${colorStyle}">${candleData[3].toLocaleString()}</span>
+                    </div>`;
 
           // MA 값 추가
           if (params.length > 1 && showMA15) {
-            tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                          <span style="color: ${CHART_OPTIONS.colors.ma15}">MA15:</span>
-                          <span style="color: ${CHART_OPTIONS.colors.ma15}">${params[1].data.toLocaleString()}</span>
-                        </div>`;
+            tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="color:${CHART_OPTIONS.colors.ma15}">MA15:</span>
+                        <span style="color:${CHART_OPTIONS.colors.ma15}">${params[1].data.toLocaleString()}</span>
+                      </div>`;
           }
 
           if (params.length > 2 && showMA60) {
-            tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                          <span style="color: ${CHART_OPTIONS.colors.ma60}">MA60:</span>
-                          <span style="color: ${CHART_OPTIONS.colors.ma60}">${params[2].data.toLocaleString()}</span>
-                        </div>`;
+            tooltip += `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="color:${CHART_OPTIONS.colors.ma60}">MA60:</span>
+                        <span style="color:${CHART_OPTIONS.colors.ma60}">${params[2].data.toLocaleString()}</span>
+                      </div>`;
           }
 
           return tooltip;
@@ -115,15 +143,12 @@ export default function ChartRender({
       grid: {
         left: '10%',
         right: '10%',
-        bottom: '15%',
+        bottom: '10%',
         top: '5%',
       },
       xAxis: {
         type: 'category',
-        data: sortedData.map((item) => {
-          const date = new Date(item.candle_date_time_kst);
-          return formatDateByZoomLevel(date, zoomLevel);
-        }),
+        data: dates,
         axisLabel: {
           formatter: (value: string) => value,
           align: 'center',
@@ -167,45 +192,18 @@ export default function ChartRender({
       dataZoom: [
         {
           type: 'inside',
-          start: 0,
-          end: 100,
-        },
-        {
-          show: true,
-          type: 'slider',
-          top: '90%',
-          start: 0,
-          end: 100,
-          borderColor: CHART_OPTIONS.colors.border,
-          textStyle: {
-            color: CHART_OPTIONS.colors.text,
-          },
-          handleStyle: {
-            color: '#fff',
-            borderColor: '#ACB8D1',
-          },
-          handleSize: '100%',
-          fillerColor: 'rgba(171, 191, 216, 0.2)',
-          dataBackground: {
-            lineStyle: {
-              color: CHART_OPTIONS.colors.border,
-            },
-            areaStyle: {
-              color: '#f5f5f5',
-            },
-          },
+          start: startValue,
+          end: endValue,
+          zoomOnMouseWheel: true, // 기본 기능 활성화
+          moveOnMouseWheel: false,
+          filterMode: 'filter',
         },
       ],
       series: [
         {
           name: 'Candle',
           type: 'candlestick',
-          data: sortedData.map((item) => [
-            Number(item.opening_price),
-            Number(item.trade_price),
-            Number(item.high_price),
-            Number(item.low_price),
-          ]),
+          data: chartData,
           itemStyle: {
             color: CHART_OPTIONS.colors.up,
             color0: CHART_OPTIONS.colors.down,
@@ -213,6 +211,16 @@ export default function ChartRender({
             borderColor0: CHART_OPTIONS.colors.down,
             borderWidth: 1,
           },
+          emphasis: {
+            itemStyle: {
+              color: CHART_OPTIONS.colors.up,
+              color0: CHART_OPTIONS.colors.down,
+              borderColor: CHART_OPTIONS.colors.up,
+              borderColor0: CHART_OPTIONS.colors.down,
+              borderWidth: 2,
+            },
+          },
+          barWidth: '70%',
         },
         ...(showMA15
           ? [
@@ -251,17 +259,40 @@ export default function ChartRender({
 
     chart.setOption(option);
 
+    // 데이터 줌 이벤트 리스너
+    chart.on('datazoom', function (params: any) {
+      if (params.batch && params.batch[0]) {
+        const start = params.batch[0].start;
+        const end = params.batch[0].end;
+
+        setStartValue(start);
+        setEndValue(end);
+        onZoomChange(end - start);
+      }
+    });
+
     // 반응형 처리
     const handleResize = () => {
       chart.resize();
     };
     window.addEventListener('resize', handleResize);
 
+    // 정리 함수
     return () => {
-      chart.dispose();
       window.removeEventListener('resize', handleResize);
+      chart.dispose();
+      chartInstanceRef.current = null;
     };
-  }, [candleData, zoomLevel, showMA15, showMA60, onZoomChange]);
+  }, [
+    candleData,
+    zoomLevel,
+    showMA15,
+    showMA60,
+    onZoomChange,
+    period,
+    startValue,
+    endValue,
+  ]);
 
   return <div ref={chartRef} style={{ width: '100%', height: '500px' }} />;
 }

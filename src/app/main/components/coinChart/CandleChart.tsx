@@ -7,6 +7,7 @@ import {
 } from '@/apis/bithumb/candleSearch';
 import { calculateMA } from '@/common/utils';
 import { useEffect, useState } from 'react';
+import { useMarket } from '../../context/MarketContext';
 import ChartHeader from './ChartHeader';
 import ChartRender from './ChartRender';
 import ChartToolbar from './ChartToolbar';
@@ -19,10 +20,14 @@ interface CandleChartProps {
 }
 
 export default function CandleChart({
-  market,
+  market: propMarket,
   period,
   detailTime,
 }: CandleChartProps) {
+  const { selectedMarket } = useMarket();
+  // props로 받은 market이 있으면 우선 사용, 없으면 context의 selectedMarket 사용
+  const market = propMarket || selectedMarket || 'KRW-BTC';
+
   const [candleData, setCandleData] = useState<any[]>([]);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number>(0);
@@ -55,18 +60,23 @@ export default function CandleChart({
         return;
       }
 
-      setCandleData(response);
+      // 데이터 시간 기준으로 정렬 (오래된 데이터부터 최신순으로)
+      const sortedData = [...response].sort(
+        (a, b) =>
+          new Date(a.candle_date_time_kst).getTime() -
+          new Date(b.candle_date_time_kst).getTime(),
+      );
+
+      setCandleData(sortedData);
 
       // 현재 가격 및 변화량 계산
-      if (response.length > 0) {
-        const sortedData = [...response].sort(
-          (a, b) =>
-            new Date(b.candle_date_time_kst).getTime() -
-            new Date(a.candle_date_time_kst).getTime(),
-        );
-
-        const latestData = sortedData[0];
-        const prevData = sortedData[1] || latestData;
+      if (sortedData.length > 0) {
+        // 최신 데이터는 배열의 마지막 항목
+        const latestData = sortedData[sortedData.length - 1];
+        const prevData =
+          sortedData.length > 1
+            ? sortedData[sortedData.length - 2]
+            : latestData;
 
         setCurrentPrice(Number(latestData.trade_price));
         setHighPrice(Number(latestData.high_price));
@@ -78,14 +88,15 @@ export default function CandleChart({
         setPriceChange(change);
         setPriceChangePercent((change / Number(prevData.trade_price)) * 100);
 
-        // MA 15 계산
-        const ma15Value = calculateMA(sortedData.slice(0, 15).reverse(), 15);
+        // MA 15 계산 (최신 데이터 기준)
+        const dataForMA = [...sortedData].slice(sortedData.length - 60); // 충분한 데이터 확보
+        const ma15Value = calculateMA(dataForMA, 15);
         setMa15(
           ma15Value.length > 0 ? ma15Value[ma15Value.length - 1].value : null,
         );
 
         // MA 60 계산
-        const ma60Value = calculateMA(sortedData.slice(0, 60).reverse(), 60);
+        const ma60Value = calculateMA(dataForMA, 60);
         setMa60(
           ma60Value.length > 0 ? ma60Value[ma60Value.length - 1].value : null,
         );
@@ -139,6 +150,7 @@ export default function CandleChart({
           showMA60={showMA60}
           zoomLevel={zoomLevel}
           onZoomChange={setZoomLevel}
+          period={period}
         />
       )}
     </div>
