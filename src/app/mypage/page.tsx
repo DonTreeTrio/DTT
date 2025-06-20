@@ -7,39 +7,7 @@ import Coin from "./components/Coin";
 import Profile from "./components/Profile";
 import * as echarts from "echarts";
 import { motion, AnimatePresence } from "framer-motion";
-
-// 스타일 정의
-const styles = {
-    container: "flex flex-col items-center pb-5 px-3 sm:px-5 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)]",
-    gridContainer: "grid gap-3 sm:gap-5 mt-3 sm:mt-5 w-full",
-    profileSection: "col-span-1 sm:col-span-3 flex flex-col",
-    assetSection: "flex flex-col w-full min-w-0",
-    assetText: "text-xs sm:text-sm md:text-base",
-    cardScrollable:
-        "overflow-y-auto max-h-[250px] sm:max-h-[300px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
-    cardCenter: "flex justify-center items-center h-[250px] sm:h-[300px]",
-    gridCols4: "grid-cols-1 sm:grid-cols-2 md:grid-cols-4",
-    gridCols3: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
-    modalOverlay: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4",
-    modalContent: "bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-[95%] sm:max-w-md",
-    cardTitle: "text-lg sm:text-xl font-bold text-gray-800 mb-4",
-    modalHeader: "flex justify-between items-center mb-4",
-    modalTitle: "text-lg sm:text-xl font-bold text-gray-800",
-    modalCloseButton: "text-gray-500 hover:text-gray-700 transition-colors p-1",
-    modalBody: "space-y-4",
-    modalFooter: "mt-6 flex justify-end gap-2",
-    modalButton: "px-4 py-2 rounded-lg transition-colors text-sm sm:text-base",
-    modalButtonPrimary: "bg-blue-500 text-white hover:bg-blue-600",
-    modalButtonSecondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
-    modalInput:
-        "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-    modalLabel: "block text-sm font-medium text-gray-700 mb-1",
-    modalFormGroup: "space-y-1",
-    modalFileInput: "hidden",
-    modalFileLabel:
-        "w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-center text-sm text-gray-600",
-    modalFilePreview: "w-24 h-24 rounded-full bg-gray-200 mx-auto mb-4 object-cover",
-};
+import { getMyPage } from "@/apis/myPage";
 
 // ECharts 옵션
 const getChartOptions = () => ({
@@ -94,7 +62,17 @@ export default function Dashboard() {
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
     const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
     const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
+    const [mypageData, setMypageData] = useState<any>(null);
 
+    console.log(mypageData);
+    const getMypageData = async () => {
+        const res = await getMyPage("M000001");
+        setMypageData(res);
+    };
+
+    useEffect(() => {
+        getMypageData();
+    }, []);
     const handleTransactionClick = (transaction: Transaction) => {
         setSelectedTransaction(transaction);
         setIsModalVisible(true);
@@ -382,3 +360,35 @@ export default function Dashboard() {
         </div>
     );
 }
+// 스타일 정의
+const styles = {
+    container: "flex flex-col items-center pb-5 px-3 sm:px-5 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)]",
+    gridContainer: "grid gap-3 sm:gap-5 mt-3 sm:mt-5 w-full",
+    profileSection: "col-span-1 sm:col-span-3 flex flex-col",
+    assetSection: "flex flex-col w-full min-w-0",
+    assetText: "text-xs sm:text-sm md:text-base",
+    cardScrollable:
+        "overflow-y-auto max-h-[250px] sm:max-h-[300px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
+    cardCenter: "flex justify-center items-center h-[250px] sm:h-[300px]",
+    gridCols4: "grid-cols-1 sm:grid-cols-2 md:grid-cols-4",
+    gridCols3: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
+    modalOverlay: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4",
+    modalContent: "bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-[95%] sm:max-w-md",
+    cardTitle: "text-lg sm:text-xl font-bold text-gray-800 mb-4",
+    modalHeader: "flex justify-between items-center mb-4",
+    modalTitle: "text-lg sm:text-xl font-bold text-gray-800",
+    modalCloseButton: "text-gray-500 hover:text-gray-700 transition-colors p-1",
+    modalBody: "space-y-4",
+    modalFooter: "mt-6 flex justify-end gap-2",
+    modalButton: "px-4 py-2 rounded-lg transition-colors text-sm sm:text-base",
+    modalButtonPrimary: "bg-blue-500 text-white hover:bg-blue-600",
+    modalButtonSecondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+    modalInput:
+        "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+    modalLabel: "block text-sm font-medium text-gray-700 mb-1",
+    modalFormGroup: "space-y-1",
+    modalFileInput: "hidden",
+    modalFileLabel:
+        "w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-center text-sm text-gray-600",
+    modalFilePreview: "w-24 h-24 rounded-full bg-gray-200 mx-auto mb-4 object-cover",
+};

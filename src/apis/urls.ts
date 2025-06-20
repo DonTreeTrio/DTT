@@ -1,4 +1,4 @@
-export const HOST_URL = "http://211.189.225.54:4764/";
+export const HOST_URL = "http://211.189.225.54:4764";
 
 export const MYPAGE = {
     EMAIL_VERFI: "/api/email-verification/verify",
