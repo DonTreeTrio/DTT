@@ -31,8 +31,12 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        port: ${{ secrets.PORT }}
+        port: 2222
         key: ${{ secrets.SSH_KEY }}
+        timeout: 60s
+        command_timeout: 300s
+        debug: true
+        use_insecure_cipher: false
         script: |
           echo "🚀 Starting deployment..."
           cd ~/dtt-fe/DTT
@@ -54,8 +58,11 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        port: ${{ secrets.PORT }}
-        password: ${{ secrets.SSH_PASSWORD }}  # 키 대신 비밀번호
+        port: 2222
+        key: ${{ secrets.SSH_KEY }}  # 일관된 인증 방식 사용
+        timeout: 30s
+        command_timeout: 60s
+        debug: true
         script: |
           echo "⏳ Waiting for application to start..."
           sleep 10
@@ -66,3 +73,19 @@ jobs:
             pm2 logs dtt-frontend --lines 10
             exit 1
           fi
+
+    - name: Connection Test (Fallback)
+      if: failure()
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: 2222
+        password: ${{ secrets.SSH_PASSWORD }}  # 키 인증 실패 시 비밀번호 시도
+        timeout: 30s
+        debug: true
+        script: |
+          echo "🔍 Testing connection with password authentication..."
+          echo "Server time: $(date)"
+          echo "Current user: $(whoami)"
+          echo "SSH connection successful!"
