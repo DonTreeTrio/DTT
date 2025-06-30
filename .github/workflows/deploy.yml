@@ -81,7 +81,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         port: 2222
-        password: ${{ secrets.SSH_PASSWORD }}  # 키 인증 실패 시 비밀번호 시도
+        password: ${{ secrets.SSH_PASSWORD }}  # 키 인증 실패 시 비밀번호 시도..
         timeout: 30s
         debug: true
         script: |
