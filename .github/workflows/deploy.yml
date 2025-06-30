@@ -1,0 +1,83 @@
+name: Deploy Next.js to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_URL: http://${{ secrets.HOST }}:8080/api
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          echo "🚀 Starting deployment..."
+
+          # 프로젝트 디렉토리로 이동
+          cd ~/dtt-fe/DTT
+
+          # 최신 코드 가져오기
+          git pull origin main
+
+          # 의존성 설치
+          npm ci
+
+          # 빌드
+          npm run build
+
+          # PM2로 앱 재시작
+          if pm2 describe dtt-frontend > /dev/null 2>&1; then
+            echo "Restarting existing process..."
+            pm2 restart dtt-frontend
+          else
+            echo "Starting new process..."
+            pm2 start npm --name "dtt-frontend" -- start
+          fi
+
+          # PM2 설정 저장
+          pm2 save
+
+          echo "✅ Deployment completed!"
+          pm2 status
+
+    - name: Health Check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          echo "⏳ Waiting for application to start..."
+          sleep 10
+
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "✅ Application is running successfully!"
+          else
+            echo "❌ Health check failed"
+            pm2 logs dtt-frontend --lines 10
+            exit 1
+          fi
