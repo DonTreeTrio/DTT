@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ProfileModal from "./ProfileModal";
 import PurchaserModal from "./PurchaserModal";
 
@@ -20,17 +21,24 @@ const styles = {
     modalContent: "bg-white p-5 rounded-lg w-96",
 };
 
-const Profile = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열기/닫기 상태
-    const [modalType, setModalType] = useState<ModalType>(null); // 모달 종류 상태
+interface ProfileProps {
+    onEditClick: () => void;
+}
+
+const Profile: React.FC<ProfileProps> = ({ onEditClick }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState<ModalType>(null);
 
     const openModal = (type: ModalType) => {
-        setModalType(type); // 모달 종류 설정
-        setIsModalOpen(true); // 모달 열기
+        setModalType(type);
+        setIsModalOpen(true);
     };
+
     const closeModal = () => {
-        setModalType(null); // 모달 종류 초기화
-        setIsModalOpen(false); // 모달 닫기
+        setIsModalOpen(false);
+        setTimeout(() => {
+            setModalType(null);
+        }, 200);
     };
 
     const purchaseItems = [
@@ -47,7 +55,7 @@ const Profile = () => {
                     <div className={styles.header}>
                         <h1 className={styles.nickname}>
                             닉네임{" "}
-                            <span onClick={() => openModal("profile")} className={styles.editIcon}>
+                            <span onClick={onEditClick} className={styles.editIcon}>
                                 ✏️
                             </span>
                         </h1>
@@ -67,20 +75,32 @@ const Profile = () => {
                 </div>
             </div>
 
-            {/* 모달 */}
-            {isModalOpen && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        {/* 내 정보 수정 모달 */}
-                        {modalType === "profile" && <ProfileModal closeModal={closeModal} />}
-
-                        {/* 구매내역 모달 */}
-                        {modalType === "purchase" && (
-                            <PurchaserModal closeModal={closeModal} purchaseItems={purchaseItems} />
-                        )}
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {isModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={styles.modalOverlay}
+                        onClick={closeModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className={styles.modalContent}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {modalType === "profile" && <ProfileModal closeModal={closeModal} />}
+                            {modalType === "purchase" && (
+                                <PurchaserModal closeModal={closeModal} purchaseItems={purchaseItems} />
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };
