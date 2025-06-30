@@ -1,3 +1,5 @@
+import { MarketResponse } from './type';
+
 export const marketApi = {
   getAllMarkets: async () => {
     try {
@@ -7,7 +9,7 @@ export const marketApi = {
       const data = await response.json();
       //console.log('data', data);
       if (data) {
-        return data.map((item: any) => ({
+        return data.map((item: MarketResponse) => ({
           market: `${item.market}`,
           korean_name: item.korean_name,
           english_name: item.english_name,

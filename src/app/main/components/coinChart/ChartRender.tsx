@@ -15,6 +15,21 @@ interface ChartRenderProps {
   period: CandlePeriod;
 }
 
+// Tooltip params 타입 정의
+interface TooltipParam {
+  data: [number, number, number, number]; // [open, close, high, low]
+  name: string;
+  seriesName: string;
+}
+
+// DataZoom 이벤트 타입 정의
+interface DataZoomEvent {
+  batch?: Array<{
+    start: number;
+    end: number;
+  }>;
+}
+
 export default function ChartRender({
   candleData,
   showMA15,
@@ -88,7 +103,7 @@ export default function ChartRender({
           color: '#333',
           fontSize: 12,
         },
-        formatter: function (params: any) {
+        formatter: function (params: TooltipParam[]) {
           if (!params || params.length === 0) return '';
 
           const candleData = params[0].data;
@@ -260,10 +275,11 @@ export default function ChartRender({
     chart.setOption(option);
 
     // 데이터 줌 이벤트 리스너
-    chart.on('datazoom', function (params: any) {
-      if (params.batch && params.batch[0]) {
-        const start = params.batch[0].start;
-        const end = params.batch[0].end;
+    chart.on('datazoom', function (params: unknown) {
+      const dataZoomParams = params as DataZoomEvent;
+      if (dataZoomParams.batch && dataZoomParams.batch[0]) {
+        const start = dataZoomParams.batch[0].start;
+        const end = dataZoomParams.batch[0].end;
 
         setStartValue(start);
         setEndValue(end);

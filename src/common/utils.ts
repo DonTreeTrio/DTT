@@ -1,4 +1,6 @@
-export function calculateMA(data: any[], count: number) {
+import { CandleData } from '@/apis/bithumb/candleSearch';
+
+export function calculateMA(data: CandleData[], count: number) {
   const result: { date: string; value: number }[] = [];
 
   if (!data || data.length === 0) return result;
