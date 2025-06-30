@@ -1,0 +1,69 @@
+name: Deploy Next.js to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build application
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_URL: http://${{ secrets.HOST }}:8080/api
+        DISABLE_ESLINT_PLUGIN: true  # ESLint 플러그인 비활성화
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          echo "🚀 Starting deployment..."
+          cd ~/dtt-fe/DTT
+          git pull origin main
+          npm install
+          DISABLE_ESLINT_PLUGIN=true npm run build
+          if pm2 describe dtt-frontend > /dev/null 2>&1; then
+            echo "Restarting existing process..."
+            pm2 restart dtt-frontend
+          else
+            echo "Starting new process..."
+            pm2 start npm --name "dtt-frontend" -- start
+          fi
+          pm2 save
+          echo "✅ Deployment completed!"
+
+    - name: Health Check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          echo "⏳ Waiting for application to start..."
+          sleep 10
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "✅ Application is running successfully!"
+          else
+            echo "❌ Health check failed"
+            pm2 logs dtt-frontend --lines 10
+            exit 1
+          fi

@@ -6,11 +6,12 @@ interface BuyListItemProps {
     coinNm: string;
     buyPrice: string;
     buyTotalPrice: string;
+    onClick?: () => void;
 }
 
-const BuyListItem = ({ buyType, buyDt, coinNm, buyPrice, buyTotalPrice }: BuyListItemProps) => {
+const BuyListItem = ({ buyType, buyDt, coinNm, buyPrice, buyTotalPrice, onClick }: BuyListItemProps) => {
     return (
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={onClick}>
             <div className="flex justify-between gap-4">
                 <span className={`${buyType ? "text-red-800" : "text-blue-800"} font-bold`}>
                     {buyType ? "매수" : "매도"}
