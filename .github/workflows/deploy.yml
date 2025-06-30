@@ -25,7 +25,6 @@ jobs:
       run: npm run build
       env:
         NEXT_PUBLIC_API_URL: http://${{ secrets.HOST }}:8080/api
-        DISABLE_ESLINT_PLUGIN: true  # ESLint 플러그인 비활성화
 
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
@@ -39,7 +38,7 @@ jobs:
           cd ~/dtt-fe/DTT
           git pull origin main
           npm install
-          DISABLE_ESLINT_PLUGIN=true npm run build
+          npm run build
           if pm2 describe dtt-frontend > /dev/null 2>&1; then
             echo "Restarting existing process..."
             pm2 restart dtt-frontend
