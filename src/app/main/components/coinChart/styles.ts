@@ -1,16 +1,23 @@
 export const CHART_STYLES = {
   container: 'w-full h-full bg-white rounded-lg shadow-sm',
   header: {
-    wrapper: 'p-4 border-b',
+    container: 'border-b',
+    wrapper: 'p-4',
     titleRow: 'flex justify-between items-center mb-2',
-    title: 'text-xl font-bold',
+    title: 'text-xl font-bold mb-2',
     toggleButtons: 'flex gap-2',
     toggleButton: (isActive: boolean) =>
       `px-2 py-1 text-xs rounded ${isActive ? 'bg-orange-100 text-orange-500' : 'bg-gray-100'}`,
+    priceContainer: 'flex items-center gap-4 mb-2',
+    price: 'text-2xl font-bold',
+    change: 'text-lg font-medium',
     priceInfo: 'flex flex-wrap gap-x-4 text-sm',
     priceLabel: 'text-gray-500',
     priceValue: (isPositive: boolean) =>
       `${isPositive ? 'text-red-500' : 'text-blue-500'}`,
+    stats: 'flex flex-wrap gap-x-4 text-sm',
+    statItem: 'flex items-center gap-1',
+    statLabel: 'text-gray-500',
     maInfo: 'mt-2 text-sm',
     ma15: 'text-orange-500',
     ma60: 'text-green-500',

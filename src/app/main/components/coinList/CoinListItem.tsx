@@ -16,15 +16,28 @@ export default function CoinListItem({
   onSelectCoin,
 }: CoinListItemProps) {
   const currentPrice = Number(tickerData.trade_price || 0); // 현재가
-  const priceChange = Number(tickerData.signed_change_price || 0); // 변동가
-  const changeRate = Number(tickerData.change_rate || 0); // 변동률
+  const priceChange = Number(tickerData.signed_change_price || 0); // 변동가 (부호 포함)
+  const changeRate = Number(tickerData.signed_change_rate || 0); // 변동률 (부호 포함)
   const volume = Math.round(
     Number(tickerData.acc_trade_price_24h || 0) / 1000000,
   ); // 거래금액
-  const priceColor =
-    tickerData.change === 'RISE' ? 'text-red-500' : 'text-blue-500';
-  const flashColor =
-    tickerData.change === 'RISE' ? 'bg-red-100/30' : 'bg-blue-100/30';
+
+  // 변동률과 변동가의 부호에 따라 색상 결정
+  const isPositive = changeRate > 0;
+  const isNegative = changeRate < 0;
+  const isZero = changeRate === 0;
+
+  const priceColor = isPositive
+    ? 'text-red-500'
+    : isNegative
+      ? 'text-blue-500'
+      : 'text-gray-500';
+
+  const flashColor = isPositive
+    ? 'bg-red-100/30'
+    : isNegative
+      ? 'bg-blue-100/30'
+      : 'bg-gray-100/30';
 
   return (
     <div
@@ -41,9 +54,16 @@ export default function CoinListItem({
       </div>
 
       <div className={`flex-[2] text-right ${priceColor}`}>
-        {tickerData.change === 'RISE' ? '+' : '-'}
-        {(changeRate * 100).toFixed(2)}%
-        <p className="text-sm">{priceChange.toLocaleString()}</p>
+        {/* 변동률 표시 - 첫 번째 줄 */}
+        <div className="text-sm">
+          {isPositive && '+'}
+          {(changeRate * 100).toFixed(2)}%
+        </div>
+        {/* 변동 금액 표시 - 두 번째 줄 */}
+        <div className="text-xs">
+          {isPositive && '+'}
+          {priceChange.toLocaleString()}
+        </div>
       </div>
 
       <div className="flex-[2] text-right">

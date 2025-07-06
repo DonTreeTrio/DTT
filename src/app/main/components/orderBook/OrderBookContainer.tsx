@@ -6,18 +6,16 @@ import { useMarket } from '../../context/MarketContext';
 import OrderBookTable from './OrderBookTable';
 
 interface OrderBookUnit {
-  ask_price: number;
-  bid_price: number;
-  ask_size: number;
-  bid_size: number;
+  price: string;
+  quantity: string;
 }
 
 interface OrderBookData {
-  market: string;
-  timestamp: number;
-  total_ask_size: number;
-  total_bid_size: number;
-  orderbook_units: OrderBookUnit[];
+  payment_currency: string;
+  timestamp: string;
+  order_currency: string;
+  bids: OrderBookUnit[];
+  asks: OrderBookUnit[];
 }
 
 export default function OrderBookContainer() {
@@ -84,8 +82,8 @@ export default function OrderBookContainer() {
     // 초기 데이터 로드
     fetchOrderBook();
 
-    // 주기적으로 호가 데이터 업데이트 (2초마다)
-    const intervalId = setInterval(fetchOrderBook, 2000);
+    // 주기적으로 호가 데이터 업데이트 (3초마다)
+    const intervalId = setInterval(fetchOrderBook, 3000);
 
     // 컴포넌트 언마운트 시 인터벌 정리
     return () => {

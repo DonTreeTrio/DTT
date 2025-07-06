@@ -74,7 +74,9 @@ export default function ChartRender({
 
     // 날짜/시간 데이터 준비
     const dates = candleData.map((item) => {
-      const date = new Date(item.candle_date_time_kst);
+      // 빗썸 API의 timestamp 처리 (밀리초 단위)
+      const timestamp = item.timestamp || item.time;
+      const date = new Date(timestamp);
       return formatDateByZoomLevel(date, zoomLevel, period);
     });
 

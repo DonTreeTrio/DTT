@@ -43,6 +43,13 @@ export default function CoinListContainer({
           change_rate: Number(ticker.signed_change_rate),
           change_price: Number(ticker.signed_change_price),
           acc_trade_price_24h: Number(ticker.acc_trade_price_24h),
+          signed_change_rate: Number(ticker.signed_change_rate),
+          signed_change_price: Number(ticker.signed_change_price),
+          opening_price: Number(ticker.opening_price || 0),
+          high_price: Number(ticker.high_price || 0),
+          low_price: Number(ticker.low_price || 0),
+          volume: Number(ticker.volume || 0),
+          acc_trade_price: Number(ticker.acc_trade_price_24h || 0),
         };
       }
       return market;

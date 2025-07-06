@@ -1,72 +1,81 @@
+import { API_CONFIG } from '../config';
+
 export type CandlePeriod = 'minutes' | 'days' | 'weeks' | 'months';
 export type CandleTime =
   | '1'
   | '3'
   | '5'
-  | '7'
   | '10'
+  | '15'
   | '30'
   | '60'
   | '240'
-  | '360'
-  | '720'
-  | 'D'
-  | 'W'
-  | 'M'
   | '';
 
 export interface CandleData {
-  market: string;
-  candle_date_time_utc: string;
-  candle_date_time_kst: string;
-  opening_price: number;
-  high_price: number;
-  low_price: number;
-  trade_price: number;
-  timestamp: number;
-  candle_acc_trade_price: number;
-  candle_acc_trade_volume: number;
+  time: number;
+  open: string;
+  close: string;
+  high: string;
+  low: string;
+  volume: string;
+  // 변환된 필드들 (차트에서 사용)
+  candle_date_time_kst?: string;
+  opening_price?: number;
+  trade_price?: number;
+  high_price?: number;
+  low_price?: number;
+  timestamp?: number;
+  candle_acc_trade_price?: number;
+  candle_acc_trade_volume?: number;
 }
 
 // 호가 조회 인터페이스
 export interface OrderBookUnit {
-  ask_price: number;
-  bid_price: number;
-  ask_size: number;
-  bid_size: number;
+  price: string;
+  quantity: string;
 }
 
 export interface OrderBookData {
-  market: string;
-  timestamp: number;
-  total_ask_size: number;
-  total_bid_size: number;
-  orderbook_units: OrderBookUnit[];
+  payment_currency: string;
+  timestamp: string;
+  order_currency: string;
+  bids: OrderBookUnit[];
+  asks: OrderBookUnit[];
 }
 
-// 캔들 조회
-// src/apis/bithumb/candleSearch.ts
+// 빗썸 v1 API 캔들 URL 생성
+const getCandleUrl = (
+  period: CandlePeriod,
+  detailTime: CandleTime,
+  market: string,
+): string => {
+  const baseUrl = `${API_CONFIG.V1_URL}${API_CONFIG.ENDPOINTS.CANDLES}`;
+
+  if (period === 'minutes') {
+    const time = detailTime || '1';
+    return `${baseUrl}/minutes/${time}?market=${market}&count=200`;
+  } else if (period === 'days') {
+    return `${baseUrl}/days?market=${market}&count=200`;
+  } else if (period === 'weeks') {
+    return `${baseUrl}/weeks?market=${market}&count=200`;
+  } else if (period === 'months') {
+    return `${baseUrl}/months?market=${market}&count=200`;
+  }
+
+  // 기본값: 1분 캔들
+  return `${baseUrl}/minutes/1?market=${market}&count=200`;
+};
+
+// 캔들 조회 - 빗썸 v1 API 사용
 export const getCandleSearch = async (
   period: CandlePeriod,
   detailTime: CandleTime,
   market: string,
 ): Promise<CandleData[]> => {
   try {
-    let url;
-
-    // 일/주/월의 경우 다른 엔드포인트 사용
-    if (period === 'days') {
-      url = `https://api.bithumb.com/v1/candles/days?market=${market}&count=500`;
-    } else if (period === 'weeks') {
-      url = `https://api.bithumb.com/v1/candles/weeks?market=${market}&count=500`;
-    } else if (period === 'months') {
-      url = `https://api.bithumb.com/v1/candles/months?market=${market}&count=500`;
-    } else {
-      // 분/시간의 경우 기존 엔드포인트 사용
-      url = `https://api.bithumb.com/v1/candles/${period}/${detailTime}?market=${market}&count=500`;
-    }
-
-    console.log('캔들 데이터 요청 URL:', url);
+    const url = getCandleUrl(period, detailTime, market);
+    //console.log('캔들 데이터 요청 URL:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -74,32 +83,50 @@ export const getCandleSearch = async (
     }
 
     const data = await response.json();
+    //console.log('캔들 데이터 응답:', data);
 
-    console.log(
-      '캔들 데이터 응답:',
-      data.length ? `${data.length}개 항목` : '데이터 없음',
-    );
-
-    if (!data || !Array.isArray(data)) {
+    if (!Array.isArray(data) || data.length === 0) {
       console.error('유효하지 않은 캔들 데이터 응답:', data);
       return [];
     }
 
-    return data;
+    // 빗썸 v1 API 응답을 차트 형식으로 변환
+    const candleData = data.map((item: any) => {
+      const timestamp = new Date(item.candle_date_time_kst).getTime();
+
+      return {
+        time: timestamp,
+        open: item.opening_price?.toString() || '0',
+        close: item.trade_price?.toString() || '0',
+        high: item.high_price?.toString() || '0',
+        low: item.low_price?.toString() || '0',
+        volume: item.candle_acc_trade_volume?.toString() || '0',
+        // 차트에서 사용하는 형식으로 변환
+        candle_date_time_kst: item.candle_date_time_kst,
+        opening_price: Number(item.opening_price) || 0,
+        trade_price: Number(item.trade_price) || 0,
+        high_price: Number(item.high_price) || 0,
+        low_price: Number(item.low_price) || 0,
+        timestamp: timestamp,
+        candle_acc_trade_price: Number(item.candle_acc_trade_price) || 0,
+        candle_acc_trade_volume: Number(item.candle_acc_trade_volume) || 0,
+      };
+    });
+
+    return candleData.reverse(); // 최신순으로 정렬
   } catch (error) {
     console.error('Failed to fetch candle data:', error);
     return [];
   }
 };
 
-// 호가 조회
+// 호가 조회 - 빗썸 v1 API 사용
 export const getOrderBook = async (
   market: string,
 ): Promise<OrderBookData | null> => {
   try {
-    const url = `https://api.bithumb.com/v1/orderbook?markets=${market}`;
-
-    console.log('호가 데이터 요청 URL:', url);
+    const url = `${API_CONFIG.V1_URL}/orderbook?markets=${market}`;
+    //console.log('호가 데이터 요청 URL:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -107,40 +134,29 @@ export const getOrderBook = async (
     }
 
     const data = await response.json();
+    //console.log('호가 데이터 응답:', data);
 
-    console.log('호가 데이터 응답:', data);
-
-    // 빗썸 API 응답 구조 처리
-    // 배열 형태로 오는 경우와 객체 형태로 오는 경우 모두 처리
-    let orderbook;
-
-    if (Array.isArray(data)) {
-      // 배열 형태인 경우 첫 번째 항목 사용
-      console.log('호가 데이터가 배열 형태로 왔습니다.');
-      if (data.length === 0) {
-        console.error('호가 데이터 배열이 비어있습니다.');
-        return null;
-      }
-      orderbook = data[0];
-    } else if (data && data.data) {
-      // 객체 내 data 속성이 있는 경우
-      orderbook = data.data;
-    } else {
-      console.error('알 수 없는 호가 데이터 응답 형식:', data);
+    if (!Array.isArray(data) || data.length === 0) {
+      console.error('유효하지 않은 호가 데이터 응답:', data);
       return null;
     }
 
-    if (!orderbook || !orderbook.orderbook_units) {
-      console.error('유효하지 않은 호가 데이터 구조:', orderbook);
-      return null;
-    }
+    const orderbook = data[0]; // 첫 번째 마켓 데이터
 
     return {
-      market: market,
-      timestamp: orderbook.timestamp || Date.now(),
-      total_ask_size: orderbook.total_ask_size || 0,
-      total_bid_size: orderbook.total_bid_size || 0,
-      orderbook_units: orderbook.orderbook_units || [],
+      payment_currency: 'KRW',
+      timestamp: orderbook.timestamp?.toString() || Date.now().toString(),
+      order_currency: market.replace('KRW-', ''),
+      bids:
+        orderbook.orderbook_units?.map((unit: any) => ({
+          price: unit.bid_price?.toString() || '0',
+          quantity: unit.bid_size?.toString() || '0',
+        })) || [],
+      asks:
+        orderbook.orderbook_units?.map((unit: any) => ({
+          price: unit.ask_price?.toString() || '0',
+          quantity: unit.ask_size?.toString() || '0',
+        })) || [],
     };
   } catch (error) {
     console.error('호가 데이터 조회 실패:', error);
