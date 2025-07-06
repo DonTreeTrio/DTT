@@ -16,7 +16,7 @@ const DynamicCandleChart = dynamic(() => import('./coinChart/CandleChart'), {
 });
 
 interface CandleChartProps {
-  market: string;
+  market?: string;
   period: CandlePeriod;
   detailTime: CandleTime | '';
 }
@@ -42,11 +42,7 @@ export function ClientTimeFilter() {
         selectedPeriod={selectedPeriod}
       />
       <div className="p-4">
-        <ClientCandleChart
-          market="KRW-BTC"
-          period={selectedPeriod}
-          detailTime={selectedTime}
-        />
+        <ClientCandleChart period={selectedPeriod} detailTime={selectedTime} />
       </div>
     </div>
   );

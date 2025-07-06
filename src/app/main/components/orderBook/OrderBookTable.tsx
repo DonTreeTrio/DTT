@@ -3,18 +3,16 @@
 import { useMarket } from '../../context/MarketContext';
 
 interface OrderBookUnit {
-  ask_price: number;
-  bid_price: number;
-  ask_size: number;
-  bid_size: number;
+  price: string;
+  quantity: string;
 }
 
 interface OrderBookData {
-  market: string;
-  timestamp: number;
-  total_ask_size: number;
-  total_bid_size: number;
-  orderbook_units: OrderBookUnit[];
+  payment_currency: string;
+  timestamp: string;
+  order_currency: string;
+  bids: OrderBookUnit[];
+  asks: OrderBookUnit[];
 }
 
 interface OrderBookTableProps {
@@ -31,7 +29,7 @@ const selectPrice = (price: number, type: 'ask' | 'bid') => {
 };
 
 export default function OrderBookTable({ orderBookData }: OrderBookTableProps) {
-  const { orderbook_units } = orderBookData;
+  const { bids = [], asks = [] } = orderBookData;
   const { marketInfo, selectedMarket } = useMarket();
 
   // 현재 선택된 마켓의 현재가 찾기
@@ -44,34 +42,42 @@ export default function OrderBookTable({ orderBookData }: OrderBookTableProps) {
   // 실제 API 데이터를 사용하여 호가 리스트 생성
   const allOrders = [];
 
-  // 매도호가 (ask)
-  for (const unit of orderbook_units) {
-    // 현재가 대비 변동률 계산
-    const changeRate =
-      currentPrice > 0
-        ? ((unit.ask_price - currentPrice) / currentPrice) * 100
-        : 0;
-    allOrders.push({
-      price: unit.ask_price,
-      size: unit.ask_size,
-      type: 'ask' as const,
-      changeRate,
-    });
+  // 매도호가 (asks) 처리
+  if (Array.isArray(asks)) {
+    for (const unit of asks) {
+      const price = Number(unit.price);
+      const size = Number(unit.quantity);
+
+      // 현재가 대비 변동률 계산
+      const changeRate =
+        currentPrice > 0 ? ((price - currentPrice) / currentPrice) * 100 : 0;
+
+      allOrders.push({
+        price: price,
+        size: size,
+        type: 'ask' as const,
+        changeRate,
+      });
+    }
   }
 
-  // 매수호가 (bid)
-  for (const unit of orderbook_units) {
-    // 현재가 대비 변동률 계산
-    const changeRate =
-      currentPrice > 0
-        ? ((unit.bid_price - currentPrice) / currentPrice) * 100
-        : 0;
-    allOrders.push({
-      price: unit.bid_price,
-      size: unit.bid_size,
-      type: 'bid' as const,
-      changeRate,
-    });
+  // 매수호가 (bids) 처리
+  if (Array.isArray(bids)) {
+    for (const unit of bids) {
+      const price = Number(unit.price);
+      const size = Number(unit.quantity);
+
+      // 현재가 대비 변동률 계산
+      const changeRate =
+        currentPrice > 0 ? ((price - currentPrice) / currentPrice) * 100 : 0;
+
+      allOrders.push({
+        price: price,
+        size: size,
+        type: 'bid' as const,
+        changeRate,
+      });
+    }
   }
 
   // 전체를 가격순으로 정렬 (높은 가격부터)
@@ -102,6 +108,21 @@ export default function OrderBookTable({ orderBookData }: OrderBookTableProps) {
   const handleBidClick = (price: number) => {
     selectPrice(price, 'bid');
   };
+
+  // 데이터가 없는 경우 처리
+  if (allOrders.length === 0) {
+    return (
+      <div className="bg-white max-w-sm">
+        <div className="px-3 py-2 bg-gray-50 text-xs text-gray-500 grid grid-cols-2 border-b">
+          <div>가격 (KRW)</div>
+          <div className="text-right">수량(BTC)</div>
+        </div>
+        <div className="p-4 text-center text-gray-500">
+          호가 데이터를 불러오는 중...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white max-w-sm">

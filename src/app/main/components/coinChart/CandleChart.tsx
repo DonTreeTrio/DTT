@@ -14,7 +14,7 @@ import ChartToolbar from './ChartToolbar';
 import { CHART_STYLES } from './styles';
 
 interface CandleChartProps {
-  market: string;
+  market?: string;
   period: CandlePeriod;
   detailTime: CandleTime | '';
 }
@@ -24,14 +24,14 @@ export default function CandleChart({
   period,
   detailTime,
 }: CandleChartProps) {
-  const { selectedMarket } = useMarket();
+  const { selectedMarket, marketInfo } = useMarket();
   // props로 받은 market이 있으면 우선 사용, 없으면 context의 selectedMarket 사용
   const market = propMarket || selectedMarket || 'KRW-BTC';
 
+  // 현재 마켓의 실시간 데이터 가져오기
+  const currentMarketData = marketInfo.find((info) => info.market === market);
+
   const [candleData, setCandleData] = useState<any[]>([]);
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [priceChange, setPriceChange] = useState<number>(0);
-  const [priceChangePercent, setPriceChangePercent] = useState<number>(0);
   const [highPrice, setHighPrice] = useState<number | null>(null);
   const [lowPrice, setLowPrice] = useState<number | null>(null);
   const [openPrice, setOpenPrice] = useState<number | null>(null);
@@ -41,6 +41,11 @@ export default function CandleChart({
   const [showMA15, setShowMA15] = useState(true);
   const [showMA60, setShowMA60] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 실시간 가격 데이터 (MarketContext에서 가져오기)
+  const currentPrice = currentMarketData?.trade_price || 0;
+  const priceChange = currentMarketData?.signed_change_price || 0;
+  const priceChangePercent = currentMarketData?.signed_change_rate || 0;
 
   const fetchCandleData = async () => {
     try {
@@ -63,30 +68,19 @@ export default function CandleChart({
       // 데이터 시간 기준으로 정렬 (오래된 데이터부터 최신순으로)
       const sortedData = [...response].sort(
         (a, b) =>
-          new Date(a.candle_date_time_kst).getTime() -
-          new Date(b.candle_date_time_kst).getTime(),
+          new Date(a.candle_date_time_kst || '').getTime() -
+          new Date(b.candle_date_time_kst || '').getTime(),
       );
 
       setCandleData(sortedData);
 
-      // 현재 가격 및 변화량 계산
+      // 캔들 데이터에서 고가, 저가, 시가만 설정 (현재가와 변동률은 실시간 데이터 사용)
       if (sortedData.length > 0) {
-        // 최신 데이터는 배열의 마지막 항목
         const latestData = sortedData[sortedData.length - 1];
-        const prevData =
-          sortedData.length > 1
-            ? sortedData[sortedData.length - 2]
-            : latestData;
 
-        setCurrentPrice(Number(latestData.trade_price));
         setHighPrice(Number(latestData.high_price));
         setLowPrice(Number(latestData.low_price));
         setOpenPrice(Number(latestData.opening_price));
-
-        const change =
-          Number(latestData.trade_price) - Number(prevData.trade_price);
-        setPriceChange(change);
-        setPriceChangePercent((change / Number(prevData.trade_price)) * 100);
 
         // MA 15 계산 (최신 데이터 기준)
         const dataForMA = [...sortedData].slice(sortedData.length - 60); // 충분한 데이터 확보
@@ -108,13 +102,9 @@ export default function CandleChart({
     }
   };
 
-  // 데이터 가져오기
+  // 캔들 데이터 가져오기 (실시간 업데이트는 필요 없음)
   useEffect(() => {
     fetchCandleData();
-    // 실시간 업데이트를 위한 인터벌 설정
-    const interval = setInterval(fetchCandleData, 1000 * 60); // 1분마다 업데이트
-
-    return () => clearInterval(interval);
   }, [market, period, detailTime]);
 
   return (
@@ -128,7 +118,7 @@ export default function CandleChart({
         highPrice={highPrice}
         lowPrice={lowPrice}
         priceChange={priceChange}
-        priceChangePercent={priceChangePercent}
+        priceChangePercent={priceChangePercent * 100} // 퍼센트로 변환
         ma15={ma15}
         ma60={ma60}
         showMA15={showMA15}

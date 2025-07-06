@@ -4,7 +4,7 @@ import { CandlePeriod, CandleTime } from '@/apis/bithumb/candleSearch';
 import { useState } from 'react';
 
 interface TimeFilterProps {
-  onTimeChange: (time: CandleTime | '', period: CandlePeriod) => void;
+  onTimeChange: (time: CandleTime, period: CandlePeriod) => void;
   selectedTime: CandleTime;
   selectedPeriod: CandlePeriod;
 }
@@ -61,22 +61,26 @@ const TIME_BUTTONS = [
     favorite: false,
   },
   {
-    id: 'hour6',
-    value: '360',
-    period: 'minutes',
-    label: '6시간',
+    id: 'day1',
+    value: '',
+    period: 'days',
+    label: '1일',
     favorite: false,
   },
   {
-    id: 'hour12',
-    value: '720',
-    period: 'minutes',
-    label: '12시간',
+    id: 'week1',
+    value: '',
+    period: 'weeks',
+    label: '1주',
     favorite: false,
   },
-  { id: 'day1', value: '', period: 'days', label: '일', favorite: true },
-  { id: 'week1', value: '', period: 'weeks', label: '주', favorite: false },
-  { id: 'month1', value: '', period: 'months', label: '월', favorite: false },
+  {
+    id: 'month1',
+    value: '',
+    period: 'months',
+    label: '1개월',
+    favorite: false,
+  },
 ] as const;
 
 export default function TimeFilter({
